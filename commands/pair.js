@@ -8,12 +8,7 @@ async function pairCommand(sock, chatId, message, q) {
                 text: "Please provide valid WhatsApp number\nExample: .pair 91702395XXXX",
                 contextInfo: {
                     forwardingScore: 1,
-                    isForwarded: true,
-                    forwardedNewsletterMessageInfo: {
-                        newsletterJid: '120363161513685998@newsletter',
-                        newsletterName: 'KnightBot MD',
-                        serverMessageId: -1
-                    }
+                    isForwarded: true
                 }
             });
         }
@@ -27,12 +22,7 @@ async function pairCommand(sock, chatId, message, q) {
                 text: "Invalid number❌️ Please use the correct format!",
                 contextInfo: {
                     forwardingScore: 1,
-                    isForwarded: true,
-                    forwardedNewsletterMessageInfo: {
-                        newsletterJid: '120363161513685998@newsletter',
-                        newsletterName: 'KnightBot MD',
-                        serverMessageId: -1
-                    }
+                    isForwarded: true
                 }
             });
         }
@@ -46,12 +36,7 @@ async function pairCommand(sock, chatId, message, q) {
                     text: `That number is not registered on WhatsApp❗️`,
                     contextInfo: {
                         forwardingScore: 1,
-                        isForwarded: true,
-                        forwardedNewsletterMessageInfo: {
-                            newsletterJid: '120363161513685998@newsletter',
-                            newsletterName: 'KnightBot MD',
-                            serverMessageId: -1
-                        }
+                        isForwarded: true
                     }
                 });
             }
@@ -60,17 +45,12 @@ async function pairCommand(sock, chatId, message, q) {
                 text: "Wait a moment for the code",
                 contextInfo: {
                     forwardingScore: 1,
-                    isForwarded: true,
-                    forwardedNewsletterMessageInfo: {
-                        newsletterJid: '120363161513685998@newsletter',
-                        newsletterName: 'KnightBot MD',
-                        serverMessageId: -1
-                    }
+                    isForwarded: true
                 }
             });
 
             try {
-                const response = await axios.get(`https://knight-bot-paircode.onrender.com/code?number=${number}`);
+                const response = await axios.get(`https://ELMINYAWE-bot-paircode.onrender.com/code?number=${number}`);
                 
                 if (response.data && response.data.code) {
                     const code = response.data.code;
@@ -83,12 +63,7 @@ async function pairCommand(sock, chatId, message, q) {
                         text: `Your pairing code: ${code}`,
                         contextInfo: {
                             forwardingScore: 1,
-                            isForwarded: true,
-                            forwardedNewsletterMessageInfo: {
-                                newsletterJid: '120363161513685998@newsletter',
-                                newsletterName: 'KnightBot MD',
-                                serverMessageId: -1
-                            }
+                            isForwarded: true
                         }
                     });
                 } else {
@@ -104,12 +79,7 @@ async function pairCommand(sock, chatId, message, q) {
                     text: errorMessage,
                     contextInfo: {
                         forwardingScore: 1,
-                        isForwarded: true,
-                        forwardedNewsletterMessageInfo: {
-                            newsletterJid: '120363161513685998@newsletter',
-                            newsletterName: 'KnightBot MD',
-                            serverMessageId: -1
-                        }
+                        isForwarded: true
                     }
                 });
             }
@@ -120,12 +90,7 @@ async function pairCommand(sock, chatId, message, q) {
             text: "An error occurred. Please try again later.",
             contextInfo: {
                 forwardingScore: 1,
-                isForwarded: true,
-                forwardedNewsletterMessageInfo: {
-                    newsletterJid: '120363161513685998@newsletter',
-                    newsletterName: 'KnightBot MD',
-                    serverMessageId: -1
-                }
+                isForwarded: true
             }
         });
     }

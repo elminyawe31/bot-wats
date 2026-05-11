@@ -1,0 +1,22 @@
+[
+  {
+    "number": "48699559064",
+    "jid": "48699559064@s.whatsapp.net",
+    "sessionPath": "/home/container/sessions/48699559064",
+    "chatId": "245788680708260@lid",
+    "senderJid": "245788680708260@lid",
+    "createdAt": "2026-05-10T17:51:07.323Z",
+    "status": "connected",
+    "connectedAt": "2026-05-11T09:21:41.911Z"
+  },
+  {
+    "number": "201017766248",
+    "jid": "201017766248@s.whatsapp.net",
+    "sessionPath": "/home/container/sessions/201017766248",
+    "chatId": "35768840003687@lid",
+    "senderJid": "35768840003687@lid",
+    "createdAt": "2026-05-11T08:31:18.613Z",
+    "status": "connected",
+    "connectedAt": "2026-05-11T09:21:46.763Z"
+  }
+]

@@ -4,7 +4,9 @@
   "antilink": {},
   "antibadword": {},
   "warnings": {},
-  "sudo": [],
+  "sudo": [
+    "137877140836402@lid"
+  ],
   "welcome": {},
   "goodbye": {},
   "chatbot": {},

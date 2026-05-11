@@ -37,13 +37,17 @@ async function getQuotedOrOwnImageUrl(sock, message) {
         const url = await sock.profilePictureUrl(targetJid, 'image');
         return url;
     } catch {
-        return 'https://i.imgur.com/2wzGhpF.png';
+        return null;
     }
 }
 
 async function handleHeart(sock, chatId, message) {
     try {
         const avatarUrl = await getQuotedOrOwnImageUrl(sock, message);
+        if (!avatarUrl) {
+            await sock.sendMessage(chatId, { text: '⚠️ Cannot get profile picture! Make sure the target has a profile photo.', ...channelInfo }, { quoted: message });
+            return;
+        }
         const url = `https://api.some-random-api.com/canvas/misc/heart?avatar=${encodeURIComponent(avatarUrl)}`;
         const response = await axios.get(url, { responseType: 'arraybuffer' });
         await sock.sendMessage(chatId, { image: Buffer.from(response.data) }, { quoted: message });
@@ -59,6 +63,10 @@ async function miscCommand(sock, chatId, message, args) {
 
     async function simpleAvatarOnly(endpoint) {
         const avatarUrl = await getQuotedOrOwnImageUrl(sock, message);
+        if (!avatarUrl) {
+            await sock.sendMessage(chatId, { text: '⚠️ Cannot get profile picture! Make sure the target has a profile photo.', ...channelInfo }, { quoted: message });
+            return;
+        }
         const url = `https://api.some-random-api.com/canvas/misc/${endpoint}?avatar=${encodeURIComponent(avatarUrl)}`;
         const response = await axios.get(url, { responseType: 'arraybuffer' });
         await sock.sendMessage(chatId, { image: Buffer.from(response.data) }, { quoted: message });

@@ -57,7 +57,6 @@ async function playCommand(sock, chatId, message) {
     }
 }
 
-module.exports = playCommand; 
+module.exports = playCommand;
 
-/*Powered by KNIGHT-BOT*
-*Credits to Keith MD*`*/
+/*Powered by ELMINYAWE*/

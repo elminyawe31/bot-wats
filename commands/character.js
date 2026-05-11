@@ -27,7 +27,7 @@ async function characterCommand(sock, chatId, message) {
         try {
             profilePic = await sock.profilePictureUrl(userToAnalyze, 'image');
         } catch {
-            profilePic = 'https://i.imgur.com/2wzGhpF.jpeg'; // Default image if no profile pic
+            profilePic = null; // No profile pic available
         }
 
         const traits = [
@@ -63,12 +63,20 @@ async function characterCommand(sock, chatId, message) {
             `Note: This is a fun analysis and should not be taken seriously!`;
 
         // Send the analysis with the user's profile picture
-        await sock.sendMessage(chatId, {
-            image: { url: profilePic },
-            caption: analysis,
-            mentions: [userToAnalyze],
-            ...channelInfo
-        });
+        if (profilePic) {
+            await sock.sendMessage(chatId, {
+                image: { url: profilePic },
+                caption: analysis,
+                mentions: [userToAnalyze],
+                ...channelInfo
+            });
+        } else {
+            await sock.sendMessage(chatId, {
+                text: analysis,
+                mentions: [userToAnalyze],
+                ...channelInfo
+            });
+        }
 
     } catch (error) {
         console.error('Error in character command:', error);

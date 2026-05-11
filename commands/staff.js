@@ -8,7 +8,7 @@ async function staffCommand(sock, chatId, msg) {
         try {
             pp = await sock.profilePictureUrl(chatId, 'image');
         } catch {
-            pp = 'https://i.imgur.com/2wzGhpF.jpeg'; // Default image
+            // No image, send text only
         }
 
         // Get admins from participants
@@ -28,12 +28,19 @@ async function staffCommand(sock, chatId, msg) {
 └───────────
 `.trim();
 
-        // Send the message with image and mentions
-        await sock.sendMessage(chatId, {
-            image: { url: pp },
-            caption: text,
-            mentions: [...groupAdmins.map(v => v.id), owner]
-        });
+        // Send the message with image and mentions (fallback to text-only if no pp)
+        if (pp) {
+            await sock.sendMessage(chatId, {
+                image: { url: pp },
+                caption: text,
+                mentions: [...groupAdmins.map(v => v.id), owner]
+            });
+        } else {
+            await sock.sendMessage(chatId, {
+                text: text,
+                mentions: [...groupAdmins.map(v => v.id), owner]
+            });
+        }
 
     } catch (error) {
         console.error('Error in staff command:', error);

@@ -142,23 +142,23 @@ const { anticallCommand, readState: readAnticallState } = require('./commands/an
 const { pmblockerCommand, readState: readPmBlockerState } = require('./commands/pmblocker');
 const settingsCommand = require('./commands/settings');
 const soraCommand = require('./commands/sora');
+const jadibotCommand = require('./commands/jadibot');
+const { initJadibot, stopAllJadibots } = require('./lib/jadibot');
+const arCommand = require('./commands/ar');
+// Language system
+const { getCommandAlias, msg, getLang } = require('./lib/lang');
 
 // Global settings
 global.packname = settings.packname;
 global.author = settings.author;
-global.channelLink = "https://whatsapp.com/channel/0029Va90zAnIHphOuO8Msp3A";
-global.ytch = "Mr Unique Hacker";
+global.channelLink = "https://whatsapp.com/channel/0029Va8zF8cDuMRi7HAK1D1y";
+global.ytch = "Yaseen ELMINYAWE";
 
 // Add this near the top of main.js with other global configurations
 const channelInfo = {
     contextInfo: {
         forwardingScore: 1,
-        isForwarded: true,
-        forwardedNewsletterMessageInfo: {
-            newsletterJid: '120363161513685998@newsletter',
-            newsletterName: 'KnightBot MD',
-            serverMessageId: -1
-        }
+        isForwarded: true
     }
 };
 
@@ -184,6 +184,31 @@ async function handleMessages(sock, messageUpdate, printLog) {
             return;
         }
 
+        // 🔍 TEMP: Detect newsletterJid from any forwarded channel message
+        try {
+            const ctxInfo = message.message?.extendedTextMessage?.contextInfo
+                || message.message?.imageMessage?.contextInfo
+                || message.message?.videoMessage?.contextInfo
+                || message.message?.documentMessage?.contextInfo;
+            if (ctxInfo?.forwardedNewsletterMessageInfo?.newsletterJid) {
+                const detectedJid = ctxInfo.forwardedNewsletterMessageInfo.newsletterJid;
+                const detectedName = ctxInfo.forwardedNewsletterMessageInfo.newsletterName || 'Unknown';
+                console.log('\n' + '═'.repeat(50));
+                console.log('🔍 NEWSLETTER JID DETECTED!');
+                console.log('   JID:    ' + detectedJid);
+                console.log('   Name:   ' + detectedName);
+                console.log('   ChatID: ' + (message.key.remoteJid || 'N/A'));
+                console.log('═'.repeat(50) + '\n');
+                // Also send it to bot owner's chat
+                const ownerNum = settings.ownerNumber?.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
+                if (ownerNum) {
+                    await sock.sendMessage(ownerNum, {
+                        text: `🔍 *Newsletter JID Detected!*\n\n📎 *JID:* \`${detectedJid}\`\n📢 *Name:* ${detectedName}\n\n🔑 Copy this JID and add it to your bot config!`
+                    });
+                }
+            }
+        } catch (detectErr) { /* silently ignore detection errors */ }
+
         const chatId = message.key.remoteJid;
         const senderId = message.key.participant || message.key.remoteJid;
         const isGroup = chatId.endsWith('@g.us');
@@ -197,7 +222,7 @@ async function handleMessages(sock, messageUpdate, printLog) {
 
             if (buttonId === 'channel') {
                 await sock.sendMessage(chatId, {
-                    text: '📢 *Join our Channel:*\nhttps://whatsapp.com/channel/0029Va90zAnIHphOuO8Msp3A'
+                    text: '📢 *قناة البوت:*\nhttps://t.me/twsfd'
                 }, { quoted: message });
                 return;
             } else if (buttonId === 'owner') {
@@ -206,13 +231,13 @@ async function handleMessages(sock, messageUpdate, printLog) {
                 return;
             } else if (buttonId === 'support') {
                 await sock.sendMessage(chatId, {
-                    text: `🔗 *Support*\n\nhttps://chat.whatsapp.com/GA4WrOFythU6g3BFVubYM7?mode=wwt`
+                    text: `🔗 *تواصل مع المطور:*\nhttps://t.me/k9p11`
                 }, { quoted: message });
                 return;
             }
         }
 
-        const userMessage = (
+        let userMessage = (
             message.message?.conversation?.trim() ||
             message.message?.extendedTextMessage?.text?.trim() ||
             message.message?.imageMessage?.caption?.trim() ||
@@ -227,6 +252,15 @@ async function handleMessages(sock, messageUpdate, printLog) {
             message.message?.imageMessage?.caption?.trim() ||
             message.message?.videoMessage?.caption?.trim() ||
             '';
+
+        // Resolve Arabic command aliases to English equivalents
+        if (userMessage.startsWith('.')) {
+            const resolved = getCommandAlias(userMessage);
+            if (resolved !== userMessage) {
+                console.log(`🔄 Alias resolved: ${userMessage} → ${resolved}`);
+            }
+            userMessage = resolved;
+        }
 
         // Only log command usage
         if (userMessage.startsWith('.')) {
@@ -243,7 +277,7 @@ async function handleMessages(sock, messageUpdate, printLog) {
         }
         const isOwnerOrSudoCheck = message.key.fromMe || senderIsOwnerOrSudo;
         // Check if user is banned (skip ban check for unban command)
-        if (isBanned(senderId) && !userMessage.startsWith('.unban')) {
+        if (isBanned(senderId) && !userMessage.startsWith('.unban') && !userMessage.startsWith('.فك_حظر') && !userMessage.startsWith('.فكحظر')) {
             // Only respond occasionally to avoid spam
             if (Math.random() < 0.1) {
                 await sock.sendMessage(chatId, {
@@ -318,11 +352,11 @@ async function handleMessages(sock, messageUpdate, printLog) {
         }
 
         // List of admin commands
-        const adminCommands = ['.mute', '.unmute', '.ban', '.unban', '.promote', '.demote', '.kick', '.tagall', '.tagnotadmin', '.hidetag', '.antilink', '.antitag', '.setgdesc', '.setgname', '.setgpp'];
+        const adminCommands = ['.mute', '.unmute', '.ban', '.unban', '.promote', '.prom', '.demote', '.dem', '.kick', '.tagall', '.tagnotadmin', '.hidetag', '.antilink', '.antitag', '.setgdesc', '.setgname', '.setgpp'];
         const isAdminCommand = adminCommands.some(cmd => userMessage.startsWith(cmd));
 
         // List of owner commands
-        const ownerCommands = ['.mode', '.autostatus', '.antidelete', '.cleartmp', '.setpp', '.clearsession', '.areact', '.autoreact', '.autotyping', '.autoread', '.pmblocker'];
+        const ownerCommands = ['.mode', '.autostatus', '.antidelete', '.cleartmp', '.setpp', '.clearsession', '.areact', '.autoreact', '.autotyping', '.autoread', '.pmblocker', '.lang', '.لغة', '.قائمة_البوتات', '.قائمةالبوتات', '.listjadibot', '.حذف_جادي', '.deljadibot', '.حذف_البوت', '.حذفالبوت', '.البوتات'];
         const isOwnerCommand = ownerCommands.some(cmd => userMessage.startsWith(cmd));
 
         let isSenderAdmin = false;
@@ -345,7 +379,9 @@ async function handleMessages(sock, messageUpdate, printLog) {
                 userMessage.startsWith('.ban') ||
                 userMessage.startsWith('.unban') ||
                 userMessage.startsWith('.promote') ||
-                userMessage.startsWith('.demote')
+                userMessage.startsWith('.prom') ||
+                userMessage.startsWith('.demote') ||
+                userMessage.startsWith('.dem')
             ) {
                 if (!isSenderAdmin && !message.key.fromMe) {
                     await sock.sendMessage(chatId, {
@@ -380,11 +416,11 @@ async function handleMessages(sock, messageUpdate, printLog) {
                 commandExecuted = true;
                 break;
             }
-            case userMessage.startsWith('.kick'):
+            case userMessage.startsWith('.kick') || userMessage.startsWith('.k'):
                 const mentionedJidListKick = message.message.extendedTextMessage?.contextInfo?.mentionedJid || [];
                 await kickCommand(sock, chatId, senderId, mentionedJidListKick, message);
                 break;
-            case userMessage.startsWith('.mute'):
+            case userMessage.startsWith('.mute') || userMessage.startsWith('.m '):
                 {
                     const parts = userMessage.trim().split(/\s+/);
                     const muteArg = parts[1];
@@ -396,10 +432,10 @@ async function handleMessages(sock, messageUpdate, printLog) {
                     }
                 }
                 break;
-            case userMessage === '.unmute':
+            case userMessage === '.unmute' || userMessage === '.um':
                 await unmuteCommand(sock, chatId, senderId);
                 break;
-            case userMessage.startsWith('.ban'):
+            case userMessage.startsWith('.ban') || userMessage.startsWith('.b '):
                 if (!isGroup) {
                     if (!message.key.fromMe && !senderIsSudo) {
                         await sock.sendMessage(chatId, { text: 'Only owner/sudo can use .ban in private chat.' }, { quoted: message });
@@ -408,7 +444,7 @@ async function handleMessages(sock, messageUpdate, printLog) {
                 }
                 await banCommand(sock, chatId, message);
                 break;
-            case userMessage.startsWith('.unban'):
+            case userMessage.startsWith('.unban') || userMessage.startsWith('.ub '):
                 if (!isGroup) {
                     if (!message.key.fromMe && !senderIsSudo) {
                         await sock.sendMessage(chatId, { text: 'Only owner/sudo can use .unban in private chat.' }, { quoted: message });
@@ -417,8 +453,20 @@ async function handleMessages(sock, messageUpdate, printLog) {
                 }
                 await unbanCommand(sock, chatId, message);
                 break;
-            case userMessage === '.help' || userMessage === '.menu' || userMessage === '.bot' || userMessage === '.list':
+            case userMessage.startsWith('.lang') || userMessage.startsWith('.لغة'):
+                await require('./commands/lang')(sock, chatId, message);
+                commandExecuted = true;
+                break;
+            case userMessage.startsWith('.تنصيب') || userMessage.startsWith('.connect') || userMessage.startsWith('.ربط') || userMessage.startsWith('.صلة') || userMessage.startsWith('.قائمة_البوتات') || userMessage.startsWith('.قائمةالبوتات') || userMessage.startsWith('.listjadibot') || userMessage.startsWith('.البوتات') || userMessage.startsWith('.حذف_جادي') || userMessage.startsWith('.deljadibot') || userMessage.startsWith('.حذف_البوت') || userMessage.startsWith('.حذفالبوت'):
+                await jadibotCommand(sock, chatId, message, isGroup);
+                commandExecuted = true;
+                break;
+            case userMessage === '.help' || userMessage === '.menu' || userMessage === '.bot' || userMessage === '.list' || userMessage === '.اوامر':
                 await helpCommand(sock, chatId, message, global.channelLink);
+                commandExecuted = true;
+                break;
+            case userMessage === '.ar':
+                await arCommand(sock, chatId, message);
                 commandExecuted = true;
                 break;
             case userMessage === '.sticker' || userMessage === '.s':
@@ -429,7 +477,7 @@ async function handleMessages(sock, messageUpdate, printLog) {
                 const mentionedJidListWarnings = message.message.extendedTextMessage?.contextInfo?.mentionedJid || [];
                 await warningsCommand(sock, chatId, mentionedJidListWarnings);
                 break;
-            case userMessage.startsWith('.warn'):
+            case userMessage.startsWith('.warn') || userMessage.startsWith('.w '):
                 const mentionedJidListWarn = message.message.extendedTextMessage?.contextInfo?.mentionedJid || [];
                 await warnCommand(sock, chatId, senderId, mentionedJidListWarn, message);
                 break;
@@ -599,7 +647,7 @@ async function handleMessages(sock, messageUpdate, printLog) {
                 if (isNaN(position)) {
                     await sock.sendMessage(chatId, { text: 'Please provide a valid position number for Tic-Tac-Toe move.', ...channelInfo }, { quoted: message });
                 } else {
-                    tictactoeMove(sock, chatId, senderId, position);
+                    handleTicTacToeMove(sock, chatId, senderId, position);
                 }
                 break;
             case userMessage === '.topmembers':
@@ -661,11 +709,11 @@ async function handleMessages(sock, messageUpdate, printLog) {
             case userMessage === '.clear':
                 if (isGroup) await clearCommand(sock, chatId);
                 break;
-            case userMessage.startsWith('.promote'):
+            case userMessage.startsWith('.promote') || userMessage.startsWith('.prom'):
                 const mentionedJidListPromote = message.message.extendedTextMessage?.contextInfo?.mentionedJid || [];
                 await promoteCommand(sock, chatId, mentionedJidListPromote, message);
                 break;
-            case userMessage.startsWith('.demote'):
+            case userMessage.startsWith('.demote') || userMessage.startsWith('.dem'):
                 const mentionedJidListDemote = message.message.extendedTextMessage?.contextInfo?.mentionedJid || [];
                 await demoteCommand(sock, chatId, mentionedJidListDemote, message);
                 break;
@@ -944,7 +992,7 @@ async function handleMessages(sock, messageUpdate, printLog) {
             case userMessage.startsWith('.tiktok') || userMessage.startsWith('.tt'):
                 await tiktokCommand(sock, chatId, message);
                 break;
-            case userMessage.startsWith('.gpt') || userMessage.startsWith('.gemini'):
+            case userMessage.startsWith('.gpt'):
                 await aiCommand(sock, chatId, message);
                 break;
             case userMessage.startsWith('.translate') || userMessage.startsWith('.trt'):
@@ -1205,13 +1253,7 @@ async function handleMessages(sock, messageUpdate, printLog) {
         }
     } catch (error) {
         console.error('❌ Error in message handler:', error.message);
-        // Only try to send error message if we have a valid chatId
-        if (chatId) {
-            await sock.sendMessage(chatId, {
-                text: '❌ Failed to process command!',
-                ...channelInfo
-            });
-        }
+        console.error(error.stack);
     }
 }
 
@@ -1258,6 +1300,9 @@ async function handleGroupParticipantUpdate(sock, update) {
         console.error('Error in handleGroupParticipantUpdate:', error);
     }
 }
+
+// Pass handleMessages to jadibot for sub-bot message handling
+const { setHandleMessages } = require('./lib/jadibot');
 
 // Instead, export the handlers along with handleMessages
 module.exports = {
