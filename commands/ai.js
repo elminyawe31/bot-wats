@@ -10,7 +10,7 @@
 
 const axios = require('axios');
 
-const OPENROUTER_API_KEY = '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';
+const OPENROUTER_API_KEY = 'Add-API-OPENROUTER-Brooo';
 const CHATGPT_MODEL = 'openai/gpt-oss-120b:free';
 const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
