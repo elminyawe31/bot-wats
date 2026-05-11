@@ -28,7 +28,6 @@ WhatsApp Group Management Bot by **Yaseen ELMINYAWE**
 - WhatsApp: https://whatsapp.com/channel/0029Va8zF8cDuMRi7HAK1D1y
 
 ## Credits
-- Baileys by @whiskeysockets
 - Developed by Yaseen ELMINYAWE
 
 ## License
